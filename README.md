@@ -1,5 +1,9 @@
 # Dotfiles — Hyprland Configuration
 
+> **Distro: Arch Linux / Manjaro** — requires `pacman` and AUR access.
+> Partial Fedora support via COPR (see [Dependencies](#dependencies)).
+> Debian/Ubuntu are not supported (Hyprland not packaged).
+
 Personal Hyprland configuration based on **[end-4/dots-hyprland](https://github.com/end-4/dots-hyprland)**.
 Most of the base configuration (quickshell, hyprland, window rules, scripts…)
 comes from that project. This repo contains only my customizations on top of it.
@@ -143,9 +147,10 @@ comes from that project. This repo contains only my customizations on top of it.
 
 ## Dependencies
 
-### pacman packages
+### Arch / Manjaro
 
 ```bash
+# pacman
 sudo pacman -S \
   hyprland hyprlock hypridle hyprpicker \
   kitty foot fuzzel wlogout cava \
@@ -158,11 +163,8 @@ sudo pacman -S \
   dbus \
   geoclue \
   eza
-```
 
-### AUR packages
-
-```bash
+# AUR (yay or pamac)
 yay -S \
   quickshell-git \
   matugen-bin \
@@ -172,7 +174,7 @@ yay -S \
   tesseract tesseract-data-fra tesseract-data-eng
 ```
 
-### Fonts
+#### Fonts
 
 ```bash
 yay -S \
@@ -181,6 +183,44 @@ yay -S \
   ttf-readex-pro \
   ttf-space-grotesk
 ```
+
+### Fedora (partial support)
+
+Enable the Hyprland COPR first:
+
+```bash
+sudo dnf copr enable solopasha/hyprland
+```
+
+```bash
+sudo dnf install \
+  hyprland hyprlock hypridle hyprpicker \
+  kitty foot fuzzel wlogout cava \
+  fish starship mpv \
+  wireplumber playerctl \
+  grim slurp wl-clipboard \
+  brightnessctl \
+  gnome-keyring libsecret \
+  cliphist \
+  geoclue2 \
+  eza \
+  easyeffects \
+  tesseract tesseract-langpack-fra tesseract-langpack-eng
+```
+
+Packages that require manual installation on Fedora:
+
+| Package | Method |
+|---|---|
+| `quickshell` | Build from source: [quickshell.outfoxxed.me](https://quickshell.outfoxxed.me/) |
+| `matugen` | Download binary from [GitHub releases](https://github.com/InioX/matugen/releases) |
+| `hyprshot` | Build from source: [github.com/Gustavo-Murdiga88/hyprshot](https://github.com/Gustavo-Murdiga88/hyprshot) |
+| `bibata-cursor-theme` | Download from [GitHub releases](https://github.com/ful1e5/Bibata_Cursor/releases) |
+| Nerd Fonts | Download from [nerdfonts.com](https://www.nerdfonts.com/font-downloads) |
+| Google Sans, Readex Pro, Space Grotesk | Download from [fonts.google.com](https://fonts.google.com) |
+
+> **Note:** `quickshell` is the most critical dependency. Without it the bar and widgets won't work.
+> The rest of the Hyprland configuration (keybindings, rules, idle, lock) will function normally.
 
 ---
 
