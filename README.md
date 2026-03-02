@@ -1,6 +1,8 @@
 # Dotfiles — Configuration Hyprland
 
-Config Hyprland personnalisée basée sur [end-4/dots-hyprland](https://github.com/end-4/dots-hyprland).
+Config Hyprland personnalisée basée sur **[end-4/dots-hyprland](https://github.com/end-4/dots-hyprland)**.
+La quasi-totalité de la configuration de base (quickshell, hyprland, règles de fenêtres, scripts…)
+provient de ce projet. Ce dépôt contient uniquement mes personnalisations par-dessus.
 
 ## Logiciels inclus
 
@@ -284,5 +286,16 @@ hypr/
 - `fish/fish_variables` est exclu (état runtime de fisher).
 - Les thèmes GTK et les couleurs Fuzzel/Hyprland sont **auto-générés**
   par matugen depuis le fond d'écran.
-- Basé sur [end-4/dots-hyprland](https://github.com/end-4/dots-hyprland) —
-  merci à end-4 pour le travail remarquable.
+---
+
+## Crédits
+
+Ce dépôt est basé sur le travail de **end-4** :
+
+> **dots-hyprland** — https://github.com/end-4/dots-hyprland
+>
+> Dotfiles Hyprland avec shell Quickshell (illogical-impulse), thème
+> Material You dynamique via matugen, et une multitude de scripts et
+> d'intégrations. Projet sous licence MIT.
+
+Merci à end-4 et tous les contributeurs pour ce travail remarquable.
