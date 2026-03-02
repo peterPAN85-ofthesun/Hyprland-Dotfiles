@@ -1,0 +1,72 @@
+# ╔═══════════════════════════════════════════════════════════╗
+# ║  Whitelist gitignore — seuls les dossiers listés          ║
+# ║  ci-dessous sont trackés. Tout le reste est ignoré.       ║
+# ╚═══════════════════════════════════════════════════════════╝
+
+# Ignorer tout par défaut
+*
+
+# ─── Ce repo ────────────────────────────────────────────────
+!.gitignore
+!README.md
+
+# ─── Hyprland ───────────────────────────────────────────────
+!hypr/
+!hypr/**
+# Fichiers de backup / comparaison
+hypr/*.new
+hypr/*.old
+
+# ─── Shell / Bar (illogical-impulse + quickshell) ───────────
+!quickshell/
+!quickshell/**
+
+!illogical-impulse/
+!illogical-impulse/**
+# Marqueurs d'état (non-config)
+illogical-impulse/installed_listfile
+illogical-impulse/installed_true
+
+# ─── Terminaux ──────────────────────────────────────────────
+!kitty/
+!kitty/**
+
+!foot/
+!foot/**
+
+# ─── Lanceur d'applications ─────────────────────────────────
+!fuzzel/
+!fuzzel/**
+
+# ─── Session / Logout ───────────────────────────────────────
+!wlogout/
+!wlogout/**
+
+# ─── Visualiseur audio ──────────────────────────────────────
+!cava/
+!cava/**
+
+# ─── Génération de thèmes Material You ──────────────────────
+!matugen/
+!matugen/**
+
+# ─── Thèmes GTK (auto-générés par matugen) ──────────────────
+!gtk-3.0/
+!gtk-3.0/**
+
+!gtk-4.0/
+!gtk-4.0/**
+
+# ─── Shell Fish ─────────────────────────────────────────────
+!fish/
+!fish/**
+# Variables runtime de fisher (état local, non versionnable)
+fish/fish_variables
+
+# ─── Prompt Starship ────────────────────────────────────────
+!starship.toml
+
+# ─── Lecteur multimédia ─────────────────────────────────────
+!mpv/
+!mpv/**
+
