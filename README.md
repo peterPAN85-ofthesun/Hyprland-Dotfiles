@@ -281,18 +281,6 @@ never in config files. Configure them via:
 
 ---
 
-## Git workflow
-
-```bash
-cd ~/.config
-git status
-git add hypr/custom/keybinds.conf
-git commit -m "feat: ..."
-git push
-```
-
----
-
 ## Hyprland file structure
 
 ```
