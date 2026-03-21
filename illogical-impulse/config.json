@@ -457,6 +457,10 @@
                     {
                         "size": 1,
                         "type": "easyEffects"
+                    },
+                    {
+                        "size": 1,
+                        "type": "mic"
                     }
                 ]
             },

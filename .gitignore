@@ -16,6 +16,8 @@
 # Fichiers de backup / comparaison
 hypr/*.new
 hypr/*.old
+# Réglages machine-spécifiques (à créer manuellement sur chaque machine)
+hypr/custom/machine.conf
 
 # ─── Shell / Bar (illogical-impulse + quickshell) ───────────
 !quickshell/
