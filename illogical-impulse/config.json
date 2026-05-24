@@ -88,7 +88,7 @@
             "intervalSeconds": 5
         },
         "thumbnailPath": "",
-        "wallpaperPath": "/home/gregoire/Images/Wallpapers/signal-2026-05-21-071612_002.jpeg",
+        "wallpaperPath": "/home/gregoire/Images/Wallpapers/20231124035920_1.jpg",
         "widgets": {
             "clock": {
                 "cookie": {
@@ -127,8 +127,8 @@
                 "showOnlyWhenLocked": false,
                 "style": "cookie",
                 "styleLocked": "cookie",
-                "x": 330.32291666666674,
-                "y": 219.39453125000006
+                "x": 174.78385416666674,
+                "y": 179.91796875000006
             },
             "weather": {
                 "enable": false,

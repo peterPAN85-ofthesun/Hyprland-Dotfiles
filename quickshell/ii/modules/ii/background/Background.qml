@@ -132,17 +132,15 @@ Variants {
                 onStreamFinished: {
                     const output = wallpaperSizeOutputCollector.text;
                     const [width, height] = output.split(" ").map(Number);
-                    const [screenWidth, screenHeight] = [bgRoot.screen.width, bgRoot.screen.height];
                     bgRoot.wallpaperWidth = width;
                     bgRoot.wallpaperHeight = height;
-
-                    if (width <= screenWidth || height <= screenHeight) {
-                        // Undersized/perfectly sized wallpapers
-                        bgRoot.effectiveWallpaperScale = Math.max(screenWidth / width, screenHeight / height);
-                    } else {
-                        // Oversized = can be zoomed for parallax, yay
-                        bgRoot.effectiveWallpaperScale = Math.min(bgRoot.preferredWallpaperScale, width / screenWidth, height / screenHeight);
-                    }
+                    // Always apply the preferred zoom relative to the screen,
+                    // regardless of source resolution. The width/height bindings
+                    // normalize by `wallpaperToScreenRatio = min(W/sw, H/sh)`,
+                    // which already guarantees the image covers the screen — so
+                    // multiplying by a constant `preferredWallpaperScale` keeps
+                    // parallax movement homogeneous across images of any size.
+                    bgRoot.effectiveWallpaperScale = bgRoot.preferredWallpaperScale;
                 }
             }
         }
@@ -151,118 +149,128 @@ Variants {
             anchors.fill: parent
             clip: true
 
-            // Wallpaper (loaded image; sits behind the crossfade snapshot).
-            // Opacity is held at 1 (no fade-in/out) so the crossfade is driven
-            // purely by `wallpaperPrev` on top — keeping a full 100% combined
-            // alpha at every frame.
-            StyledImage {
-                id: wallpaper
-                z: 0
-                visible: opacity > 0 && !blurLoader.active
-                opacity: bgRoot.wallpaperIsVideo ? 0 : 1
-                // cache=true so the previous wallpaper texture stays in the
-                // Pixmap cache. When `wallpaperPrev` later sets its source to
-                // this path, the load is a cache hit (effectively instant),
-                // which is what eliminates the brief "IMAGE2 flash" before
-                // the crossfade begins.
-                cache: true
-                smooth: false
-                // Range = groups that workspaces span on
-                property int chunkSize: Config?.options.bar.workspaces.shown ?? 10
-                property int lower: Math.floor(bgRoot.firstWorkspaceId / chunkSize) * chunkSize
-                property int upper: Math.ceil(bgRoot.lastWorkspaceId / chunkSize) * chunkSize
-                property int range: upper - lower
-                property real valueX: {
-                    let result = 0.5;
-                    if (Config.options.background.parallax.enableWorkspace && !bgRoot.verticalParallax) {
-                        result = ((bgRoot.monitor.activeWorkspace?.id - lower) / range);
-                    }
-                    if (Config.options.background.parallax.enableSidebar) {
-                        result += (0.15 * GlobalStates.sidebarRightOpen - 0.15 * GlobalStates.sidebarLeftOpen);
-                    }
-                    return result;
-                }
-                property real valueY: {
-                    let result = 0.5;
-                    if (Config.options.background.parallax.enableWorkspace && bgRoot.verticalParallax) {
-                        result = ((bgRoot.monitor.activeWorkspace?.id - lower) / range);
-                    }
-                    return result;
-                }
-                property real effectiveValueX: Math.max(0, Math.min(1, valueX))
-                property real effectiveValueY: Math.max(0, Math.min(1, valueY))
-                x: -(bgRoot.movableXSpace) - (effectiveValueX - 0.5) * 2 * bgRoot.movableXSpace
-                y: -(bgRoot.movableYSpace) - (effectiveValueY - 0.5) * 2 * bgRoot.movableYSpace
-                fillMode: Image.PreserveAspectCrop
-                onStatusChanged: {
-                    // Only start the crossfade fade-out when the NEW image is
-                    // ready — not on a spurious re-decode of the same source
-                    // that fires when sourceSize/width/height change (e.g. once
-                    // `updateZoomScale()` finishes its async `magick identify`).
-                    if (status === Image.Ready && !bgRoot.wallpaperIsVideo && source !== ""
-                            && source.toString() !== wallpaperPrev.source.toString()) {
-                        wallpaperPrev.opacity = 0
-                    }
-                }
-                Behavior on x {
-                    NumberAnimation {
-                        duration: 600
-                        easing.type: Easing.OutCubic
-                    }
-                }
-                Behavior on y {
-                    NumberAnimation {
-                        duration: 600
-                        easing.type: Easing.OutCubic
-                    }
-                }
-                sourceSize {
-                    width: bgRoot.screen.width * bgRoot.effectiveWallpaperScale * bgRoot.monitor.scale
-                    height: bgRoot.screen.height * bgRoot.effectiveWallpaperScale * bgRoot.monitor.scale
-                }
-                width: bgRoot.wallpaperWidth / bgRoot.wallpaperToScreenRatio * bgRoot.effectiveWallpaperScale
-                height: bgRoot.wallpaperHeight / bgRoot.wallpaperToScreenRatio * bgRoot.effectiveWallpaperScale
-            }
+            // Container that groups `wallpaper` + `wallpaperPrev` so the lock
+            // blur can use it as a single source — otherwise `wallpaperPrev`
+            // (z:1) would render unblurred on top of `blurLoader` during each
+            // crossfade transition while the screen is locked.
+            Item {
+                id: wallpaperLayer
+                anchors.fill: parent
+                visible: !blurLoader.active
 
-            // Snapshot of the previous wallpaper, layered ON TOP of `wallpaper`.
-            // Geometry properties are bound to `wallpaper` initially (so the
-            // snapshot always covers the same on-screen area) but are
-            // overwritten with static values in `onWallpaperPathChanged` at the
-            // start of each transition. Once written imperatively, the binding
-            // breaks and the snapshot keeps the OLD image's geometry for the
-            // duration of the crossfade — only the underlying `wallpaper`
-            // layer adopts the NEW image's dimensions.
-            StyledImage {
-                id: wallpaperPrev
-                z: 1
-                property real frozenX: wallpaper.x
-                property real frozenY: wallpaper.y
-                property real frozenWidth: wallpaper.width
-                property real frozenHeight: wallpaper.height
-                property size frozenSourceSize: Qt.size(
-                    bgRoot.screen.width * bgRoot.effectiveWallpaperScale * bgRoot.monitor.scale,
-                    bgRoot.screen.height * bgRoot.effectiveWallpaperScale * bgRoot.monitor.scale
-                )
-                x: frozenX
-                y: frozenY
-                width: frozenWidth
-                height: frozenHeight
-                sourceSize: frozenSourceSize
-                visible: opacity > 0
-                opacity: 0
-                fillMode: Image.PreserveAspectCrop
-                cache: true
-                smooth: false
-                Behavior on opacity {
-                    enabled: wallpaperPrev.opacity > 0
-                    NumberAnimation { duration: Config.options.background.crossfadeDuration; easing.type: Easing.OutCubic }
+                // Wallpaper (loaded image; sits behind the crossfade snapshot).
+                // Opacity is held at 1 (no fade-in/out) so the crossfade is driven
+                // purely by `wallpaperPrev` on top — keeping a full 100% combined
+                // alpha at every frame.
+                StyledImage {
+                    id: wallpaper
+                    z: 0
+                    visible: opacity > 0
+                    opacity: bgRoot.wallpaperIsVideo ? 0 : 1
+                    // cache=true so the previous wallpaper texture stays in the
+                    // Pixmap cache. When `wallpaperPrev` later sets its source to
+                    // this path, the load is a cache hit (effectively instant),
+                    // which is what eliminates the brief "IMAGE2 flash" before
+                    // the crossfade begins.
+                    cache: true
+                    smooth: false
+                    // Range = groups that workspaces span on
+                    property int chunkSize: Config?.options.bar.workspaces.shown ?? 10
+                    property int lower: Math.floor(bgRoot.firstWorkspaceId / chunkSize) * chunkSize
+                    property int upper: Math.ceil(bgRoot.lastWorkspaceId / chunkSize) * chunkSize
+                    property int range: upper - lower
+                    property real valueX: {
+                        let result = 0.5;
+                        if (Config.options.background.parallax.enableWorkspace && !bgRoot.verticalParallax) {
+                            result = ((bgRoot.monitor.activeWorkspace?.id - lower) / range);
+                        }
+                        if (Config.options.background.parallax.enableSidebar) {
+                            result += (0.15 * GlobalStates.sidebarRightOpen - 0.15 * GlobalStates.sidebarLeftOpen);
+                        }
+                        return result;
+                    }
+                    property real valueY: {
+                        let result = 0.5;
+                        if (Config.options.background.parallax.enableWorkspace && bgRoot.verticalParallax) {
+                            result = ((bgRoot.monitor.activeWorkspace?.id - lower) / range);
+                        }
+                        return result;
+                    }
+                    property real effectiveValueX: Math.max(0, Math.min(1, valueX))
+                    property real effectiveValueY: Math.max(0, Math.min(1, valueY))
+                    x: -(bgRoot.movableXSpace) - (effectiveValueX - 0.5) * 2 * bgRoot.movableXSpace
+                    y: -(bgRoot.movableYSpace) - (effectiveValueY - 0.5) * 2 * bgRoot.movableYSpace
+                    fillMode: Image.PreserveAspectCrop
+                    onStatusChanged: {
+                        // Only start the crossfade fade-out when the NEW image is
+                        // ready — not on a spurious re-decode of the same source
+                        // that fires when sourceSize/width/height change (e.g. once
+                        // `updateZoomScale()` finishes its async `magick identify`).
+                        if (status === Image.Ready && !bgRoot.wallpaperIsVideo && source !== ""
+                                && source.toString() !== wallpaperPrev.source.toString()) {
+                            wallpaperPrev.opacity = 0
+                        }
+                    }
+                    Behavior on x {
+                        NumberAnimation {
+                            duration: 600
+                            easing.type: Easing.OutCubic
+                        }
+                    }
+                    Behavior on y {
+                        NumberAnimation {
+                            duration: 600
+                            easing.type: Easing.OutCubic
+                        }
+                    }
+                    sourceSize {
+                        width: bgRoot.screen.width * bgRoot.effectiveWallpaperScale * bgRoot.monitor.scale
+                        height: bgRoot.screen.height * bgRoot.effectiveWallpaperScale * bgRoot.monitor.scale
+                    }
+                    width: bgRoot.wallpaperWidth / bgRoot.wallpaperToScreenRatio * bgRoot.effectiveWallpaperScale
+                    height: bgRoot.wallpaperHeight / bgRoot.wallpaperToScreenRatio * bgRoot.effectiveWallpaperScale
+                }
+
+                // Snapshot of the previous wallpaper, layered ON TOP of `wallpaper`.
+                // Geometry properties are bound to `wallpaper` initially (so the
+                // snapshot always covers the same on-screen area) but are
+                // overwritten with static values in `onWallpaperPathChanged` at the
+                // start of each transition. Once written imperatively, the binding
+                // breaks and the snapshot keeps the OLD image's geometry for the
+                // duration of the crossfade — only the underlying `wallpaper`
+                // layer adopts the NEW image's dimensions.
+                StyledImage {
+                    id: wallpaperPrev
+                    z: 1
+                    property real frozenX: wallpaper.x
+                    property real frozenY: wallpaper.y
+                    property real frozenWidth: wallpaper.width
+                    property real frozenHeight: wallpaper.height
+                    property size frozenSourceSize: Qt.size(
+                        bgRoot.screen.width * bgRoot.effectiveWallpaperScale * bgRoot.monitor.scale,
+                        bgRoot.screen.height * bgRoot.effectiveWallpaperScale * bgRoot.monitor.scale
+                    )
+                    x: frozenX
+                    y: frozenY
+                    width: frozenWidth
+                    height: frozenHeight
+                    sourceSize: frozenSourceSize
+                    visible: opacity > 0
+                    opacity: 0
+                    fillMode: Image.PreserveAspectCrop
+                    cache: true
+                    smooth: false
+                    Behavior on opacity {
+                        enabled: wallpaperPrev.opacity > 0
+                        NumberAnimation { duration: Config.options.background.crossfadeDuration; easing.type: Easing.OutCubic }
+                    }
                 }
             }
 
             Loader {
                 id: blurLoader
                 active: Config.options.lock.blur.enable && (GlobalStates.screenLocked || scaleAnim.running)
-                anchors.fill: wallpaper
+                anchors.fill: wallpaperLayer
                 scale: GlobalStates.screenLocked ? Config.options.lock.blur.extraZoom : 1
                 Behavior on scale {
                     NumberAnimation {
@@ -273,7 +281,7 @@ Variants {
                     }
                 }
                 sourceComponent: GaussianBlur {
-                    source: wallpaper
+                    source: wallpaperLayer
                     radius: GlobalStates.screenLocked ? Config.options.lock.blur.radius : 0
                     samples: radius * 2 + 1
 
