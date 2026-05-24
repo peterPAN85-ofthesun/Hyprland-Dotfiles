@@ -213,6 +213,7 @@ Singleton {
                 property string wallpaperPath: ""
                 property string thumbnailPath: ""
                 property bool hideWhenFullscreen: true
+                property int crossfadeDuration: 800 // milliseconds
                 property JsonObject parallax: JsonObject {
                     property bool vertical: false
                     property bool autoVertical: false
@@ -220,6 +221,13 @@ Singleton {
                     property real workspaceZoom: 1.07 // Relative to your screen, not wallpaper size
                     property bool enableSidebar: true
                     property real widgetsFactor: 1.2
+                }
+                property JsonObject slideshow: JsonObject {
+                    property bool enable: false
+                    property string folder: ""
+                    property int intervalHours: 0
+                    property int intervalMinutes: 5
+                    property int intervalSeconds: 0
                 }
             }
 

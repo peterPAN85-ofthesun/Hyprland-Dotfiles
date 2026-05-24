@@ -29,6 +29,45 @@ Singleton {
     readonly property bool thumbnailGenerationRunning: thumbgenProc.running
     property real thumbnailGenerationProgress: 0
 
+    // Slideshow
+    property int slideshowIndex: -1
+    readonly property int slideshowTotalMs: {
+        const s = Config.options.background?.slideshow
+        if (!s) return 0
+        return ((s.intervalHours ?? 0) * 3600 + (s.intervalMinutes ?? 0) * 60 + (s.intervalSeconds ?? 0)) * 1000
+    }
+    onSlideshowTotalMsChanged: {
+        if (slideshowTimer.running) slideshowTimer.restart()
+    }
+
+    FolderListModel {
+        id: slideshowFolderModel
+        folder: {
+            const raw = Config.options.background?.slideshow?.folder ?? ""
+            return (raw && raw.length > 0) ? Qt.resolvedUrl(raw) : root.defaultFolder
+        }
+        caseSensitive: false
+        nameFilters: root.extensions.map(ext => `*.${ext}`)
+        showDirs: false
+        showDotAndDotDot: false
+        showOnlyReadable: true
+        sortField: FolderListModel.Name
+    }
+
+    Timer {
+        id: slideshowTimer
+        interval: Math.max(1000, root.slideshowTotalMs)
+        repeat: true
+        running: (Config.options.background?.slideshow?.enable === true) && root.slideshowTotalMs > 0
+        onTriggered: {
+            if (slideshowFolderModel.count === 0) return
+            root.slideshowIndex = (root.slideshowIndex + 1) % slideshowFolderModel.count
+            const path = slideshowFolderModel.get(root.slideshowIndex, "filePath")
+                || FileUtils.trimFileProtocol(slideshowFolderModel.get(root.slideshowIndex, "fileUrl") ?? "")
+            if (path && path.length > 0) Config.options.background.wallpaperPath = path
+        }
+    }
+
     signal changed()
     signal thumbnailGenerated(directory: string)
     signal thumbnailGeneratedFile(filePath: string)

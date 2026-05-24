@@ -88,9 +88,34 @@ Variants {
             animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
         }
 
+        Component.onCompleted: {
+            wallpaper.source = bgRoot.wallpaperSafetyTriggered ? "" : bgRoot.wallpaperPath
+        }
+
         onWallpaperPathChanged: {
-            bgRoot.updateZoomScale();
-            // Clock position gets updated after zoom scale is updated
+            bgRoot.updateZoomScale()
+            const newPath = bgRoot.wallpaperSafetyTriggered ? "" : bgRoot.wallpaperPath
+            if (!bgRoot.wallpaperIsVideo && wallpaper.status === Image.Ready && wallpaper.source !== "" && wallpaper.source.toString() !== Qt.resolvedUrl(newPath).toString()) {
+                // Freeze the OLD wallpaper's geometry on the snapshot layer so
+                // it stays still during the crossfade. Otherwise, when the NEW
+                // image forces a different `effectiveWallpaperScale` (e.g. a
+                // same-size wallpaper drops scale from 1.07 to 1), wallpaper's
+                // width/height would shrink mid-fade and re-crop the snapshot.
+                wallpaperPrev.frozenX = wallpaper.x
+                wallpaperPrev.frozenY = wallpaper.y
+                wallpaperPrev.frozenWidth = wallpaper.width
+                wallpaperPrev.frozenHeight = wallpaper.height
+                wallpaperPrev.frozenSourceSize = Qt.size(wallpaper.sourceSize.width, wallpaper.sourceSize.height)
+                wallpaperPrev.source = wallpaper.source
+                wallpaperPrev.opacity = 1
+                wallpaper.source = newPath
+            } else {
+                wallpaper.source = newPath
+            }
+        }
+
+        onWallpaperSafetyTriggeredChanged: {
+            wallpaper.source = bgRoot.wallpaperSafetyTriggered ? "" : bgRoot.wallpaperPath
         }
 
         // Wallpaper zoom scale
@@ -126,12 +151,21 @@ Variants {
             anchors.fill: parent
             clip: true
 
-            // Wallpaper
+            // Wallpaper (loaded image; sits behind the crossfade snapshot).
+            // Opacity is held at 1 (no fade-in/out) so the crossfade is driven
+            // purely by `wallpaperPrev` on top — keeping a full 100% combined
+            // alpha at every frame.
             StyledImage {
                 id: wallpaper
+                z: 0
                 visible: opacity > 0 && !blurLoader.active
-                opacity: (status === Image.Ready && !bgRoot.wallpaperIsVideo) ? 1 : 0
-                cache: false
+                opacity: bgRoot.wallpaperIsVideo ? 0 : 1
+                // cache=true so the previous wallpaper texture stays in the
+                // Pixmap cache. When `wallpaperPrev` later sets its source to
+                // this path, the load is a cache hit (effectively instant),
+                // which is what eliminates the brief "IMAGE2 flash" before
+                // the crossfade begins.
+                cache: true
                 smooth: false
                 // Range = groups that workspaces span on
                 property int chunkSize: Config?.options.bar.workspaces.shown ?? 10
@@ -159,8 +193,17 @@ Variants {
                 property real effectiveValueY: Math.max(0, Math.min(1, valueY))
                 x: -(bgRoot.movableXSpace) - (effectiveValueX - 0.5) * 2 * bgRoot.movableXSpace
                 y: -(bgRoot.movableYSpace) - (effectiveValueY - 0.5) * 2 * bgRoot.movableYSpace
-                source: bgRoot.wallpaperSafetyTriggered ? "" : bgRoot.wallpaperPath
                 fillMode: Image.PreserveAspectCrop
+                onStatusChanged: {
+                    // Only start the crossfade fade-out when the NEW image is
+                    // ready — not on a spurious re-decode of the same source
+                    // that fires when sourceSize/width/height change (e.g. once
+                    // `updateZoomScale()` finishes its async `magick identify`).
+                    if (status === Image.Ready && !bgRoot.wallpaperIsVideo && source !== ""
+                            && source.toString() !== wallpaperPrev.source.toString()) {
+                        wallpaperPrev.opacity = 0
+                    }
+                }
                 Behavior on x {
                     NumberAnimation {
                         duration: 600
@@ -179,6 +222,41 @@ Variants {
                 }
                 width: bgRoot.wallpaperWidth / bgRoot.wallpaperToScreenRatio * bgRoot.effectiveWallpaperScale
                 height: bgRoot.wallpaperHeight / bgRoot.wallpaperToScreenRatio * bgRoot.effectiveWallpaperScale
+            }
+
+            // Snapshot of the previous wallpaper, layered ON TOP of `wallpaper`.
+            // Geometry properties are bound to `wallpaper` initially (so the
+            // snapshot always covers the same on-screen area) but are
+            // overwritten with static values in `onWallpaperPathChanged` at the
+            // start of each transition. Once written imperatively, the binding
+            // breaks and the snapshot keeps the OLD image's geometry for the
+            // duration of the crossfade — only the underlying `wallpaper`
+            // layer adopts the NEW image's dimensions.
+            StyledImage {
+                id: wallpaperPrev
+                z: 1
+                property real frozenX: wallpaper.x
+                property real frozenY: wallpaper.y
+                property real frozenWidth: wallpaper.width
+                property real frozenHeight: wallpaper.height
+                property size frozenSourceSize: Qt.size(
+                    bgRoot.screen.width * bgRoot.effectiveWallpaperScale * bgRoot.monitor.scale,
+                    bgRoot.screen.height * bgRoot.effectiveWallpaperScale * bgRoot.monitor.scale
+                )
+                x: frozenX
+                y: frozenY
+                width: frozenWidth
+                height: frozenHeight
+                sourceSize: frozenSourceSize
+                visible: opacity > 0
+                opacity: 0
+                fillMode: Image.PreserveAspectCrop
+                cache: true
+                smooth: false
+                Behavior on opacity {
+                    enabled: wallpaperPrev.opacity > 0
+                    NumberAnimation { duration: Config.options.background.crossfadeDuration; easing.type: Easing.OutCubic }
+                }
             }
 
             Loader {

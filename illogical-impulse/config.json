@@ -31,7 +31,7 @@
         },
         "palette": {
             "accentColor": "",
-            "type": "scheme-tonal-spot"
+            "type": "scheme-rainbow"
         },
         "transparency": {
             "automatic": true,
@@ -70,7 +70,8 @@
         }
     },
     "background": {
-        "hideWhenFullscreen": true,
+        "crossfadeDuration": 2000,
+        "hideWhenFullscreen": false,
         "parallax": {
             "autoVertical": false,
             "enableSidebar": true,
@@ -79,8 +80,15 @@
             "widgetsFactor": 1.2,
             "workspaceZoom": 1.07
         },
+        "slideshow": {
+            "enable": true,
+            "folder": "/home/gregoire/Images/Wallpapers",
+            "intervalHours": 0,
+            "intervalMinutes": 0,
+            "intervalSeconds": 5
+        },
         "thumbnailPath": "",
-        "wallpaperPath": "/home/gregoire/Téléchargements/shadow-of-the-colossus-02-gq-1feb18_b.webp",
+        "wallpaperPath": "/home/gregoire/Images/Wallpapers/shadow-of-the-colossus-02-gq-1feb18_b.webp",
         "widgets": {
             "clock": {
                 "cookie": {
@@ -111,7 +119,7 @@
                     "vertical": false
                 },
                 "enable": true,
-                "placementStrategy": "mostBusy",
+                "placementStrategy": "free",
                 "quote": {
                     "enable": false,
                     "text": ""
@@ -119,8 +127,8 @@
                 "showOnlyWhenLocked": false,
                 "style": "cookie",
                 "styleLocked": "cookie",
-                "x": 495,
-                "y": 225
+                "x": 330.32291666666674,
+                "y": 219.39453125000006
             },
             "weather": {
                 "enable": false,

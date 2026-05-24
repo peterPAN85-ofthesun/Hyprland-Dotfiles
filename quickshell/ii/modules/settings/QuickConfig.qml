@@ -228,6 +228,115 @@ ContentPage {
         }
     }
 
+    // Slideshow
+    ContentSection {
+        icon: "slideshow"
+        title: Translation.tr("Wallpaper slideshow")
+        Layout.fillWidth: true
+
+        Process {
+            id: slideshowFolderPickerProc
+            command: ["kdialog", "--getexistingdirectory",
+                (Config.options.background?.slideshow?.folder ?? "").length > 0
+                    ? Config.options.background.slideshow.folder
+                    : FileUtils.trimFileProtocol(Directories.pictures)]
+            stdout: StdioCollector {
+                onStreamFinished: {
+                    const path = text.trim()
+                    if (path && path.length > 0) {
+                        Config.options.background.slideshow.folder = path
+                        slideshowFolderField.text = path
+                    }
+                }
+            }
+        }
+
+        ConfigSwitch {
+            buttonIcon: "play_circle"
+            text: Translation.tr("Enable slideshow")
+            checked: Config.options.background?.slideshow?.enable === true
+            onCheckedChanged: Config.options.background.slideshow.enable = checked
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 4
+
+            MaterialTextField {
+                id: slideshowFolderField
+                Layout.fillWidth: true
+                placeholderText: FileUtils.trimFileProtocol(Directories.pictures) + "/Wallpapers"
+                Component.onCompleted: text = Config.options.background?.slideshow?.folder ?? ""
+                onEditingFinished: Config.options.background.slideshow.folder = text.trim()
+            }
+
+            RippleButton {
+                implicitWidth: 40
+                implicitHeight: 40
+                buttonRadius: Appearance.rounding.small
+                onClicked: slideshowFolderPickerProc.running = true
+                contentItem: MaterialSymbol {
+                    anchors.centerIn: parent
+                    iconSize: 20
+                    text: "folder_open"
+                    color: Appearance.colors.colOnLayer2
+                }
+                StyledToolTip {
+                    text: Translation.tr("Browse folders")
+                }
+            }
+        }
+
+        ContentSubsection {
+            title: Translation.tr("Interval")
+
+            RowLayout {
+                spacing: 4
+
+                MaterialTextField {
+                    id: slideshowHoursField
+                    implicitWidth: 68
+                    maximumLength: 2
+                    validator: RegularExpressionValidator { regularExpression: /^\d{0,2}$/ }
+                    Component.onCompleted: text = String(Config.options.background?.slideshow?.intervalHours ?? 0).padStart(2, "0")
+                    onTextEdited: { const v = parseInt(text); if (!isNaN(v)) Config.options.background.slideshow.intervalHours = v }
+                    onEditingFinished: { const v = parseInt(text) || 0; text = String(v).padStart(2, "0") }
+                }
+                StyledText { text: "h :" }
+                MaterialTextField {
+                    id: slideshowMinutesField
+                    implicitWidth: 68
+                    maximumLength: 2
+                    validator: RegularExpressionValidator { regularExpression: /^\d{0,2}$/ }
+                    Component.onCompleted: text = String(Config.options.background?.slideshow?.intervalMinutes ?? 5).padStart(2, "0")
+                    onTextEdited: { const v = parseInt(text); if (!isNaN(v)) Config.options.background.slideshow.intervalMinutes = v }
+                    onEditingFinished: { const v = parseInt(text) || 0; text = String(v).padStart(2, "0") }
+                }
+                StyledText { text: "m :" }
+                MaterialTextField {
+                    id: slideshowSecondsField
+                    implicitWidth: 68
+                    maximumLength: 2
+                    validator: RegularExpressionValidator { regularExpression: /^\d{0,2}$/ }
+                    Component.onCompleted: text = String(Config.options.background?.slideshow?.intervalSeconds ?? 0).padStart(2, "0")
+                    onTextEdited: { const v = parseInt(text); if (!isNaN(v)) Config.options.background.slideshow.intervalSeconds = v }
+                    onEditingFinished: { const v = parseInt(text) || 0; text = String(v).padStart(2, "0") }
+                }
+                StyledText { text: "s" }
+            }
+        }
+
+        ConfigSpinBox {
+            icon: "transition_fade"
+            text: Translation.tr("Crossfade duration (ms)")
+            value: Config.options.background.crossfadeDuration
+            from: 0
+            to: 5000
+            stepSize: 50
+            onValueChanged: Config.options.background.crossfadeDuration = value
+        }
+    }
+
     ContentSection {
         icon: "screenshot_monitor"
         title: Translation.tr("Bar & screen")
