@@ -31,7 +31,7 @@
         },
         "palette": {
             "accentColor": "",
-            "type": "scheme-rainbow"
+            "type": "scheme-tonal-spot"
         },
         "transparency": {
             "automatic": true,
@@ -88,7 +88,7 @@
             "intervalSeconds": 5
         },
         "thumbnailPath": "",
-        "wallpaperPath": "/home/gregoire/Images/Wallpapers/signal-2026-05-21-071612_002.jpeg",
+        "wallpaperPath": "/home/gregoire/Images/Wallpapers/20260201010924_1.jpg",
         "widgets": {
             "clock": {
                 "cookie": {
