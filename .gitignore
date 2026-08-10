@@ -72,3 +72,10 @@ fish/fish_variables
 !mpv/
 !mpv/**
 
+# ─── Serveur audio (PipeWire + couche JACK) ─────────────────
+!pipewire/
+!pipewire/**
+# Routage de la sortie virtuelle : contient des identifiants matériels
+# (noms de nœuds ALSA, adresses MAC Bluetooth) → propre à chaque machine.
+pipewire/pipewire.conf.d/50-virtual-out-routing.conf
+
