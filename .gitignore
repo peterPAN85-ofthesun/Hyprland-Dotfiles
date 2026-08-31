@@ -65,6 +65,15 @@ illogical-impulse/installed_true
 # Variables runtime de fisher (état local, non versionnable)
 fish/fish_variables
 
+# ─── Shell Zsh ──────────────────────────────────────────────
+# Chargé via ZDOTDIR, défini dans ~/.zshenv (hors repo, non versionnable).
+# L'historique vit dans ~/.local/state/zsh/ pour garder ce dossier propre.
+!zsh/
+!zsh/**
+# Filet de sécurité : le cache de complétion contient le nom de la machine.
+# Normalement déjà redirigé vers ~/.cache/zsh/ par $ZSH_COMPDUMP.
+zsh/.zcompdump*
+
 # ─── Prompt Starship ────────────────────────────────────────
 !starship.toml
 

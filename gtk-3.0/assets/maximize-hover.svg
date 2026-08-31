@@ -12,13 +12,13 @@ font-family="Google Sans Flex" font-size="11" font-weight="500" font-style="norm
 >
 </g>
 
-<g fill="#e0e3e8" fill-opacity="1" stroke="none" transform="matrix(2.5,0,0,2.5,2.5,2.5)"
+<g fill="#dee4e1" fill-opacity="1" stroke="none" transform="matrix(2.5,0,0,2.5,2.5,2.5)"
 font-family="Google Sans Flex" font-size="11" font-weight="500" font-style="normal" 
 >
 <circle cx="9" cy="9" r="9"/>
 </g>
 
-<g fill="none" stroke="#2f3337" stroke-opacity="1" stroke-width="1.01" stroke-linecap="round" stroke-linejoin="miter" stroke-miterlimit="2" transform="matrix(2.5,0,0,2.5,2.5,2.5)"
+<g fill="none" stroke="#2e3432" stroke-opacity="1" stroke-width="1.01" stroke-linecap="round" stroke-linejoin="miter" stroke-miterlimit="2" transform="matrix(2.5,0,0,2.5,2.5,2.5)"
 font-family="Google Sans Flex" font-size="11" font-weight="500" font-style="normal" 
 >
 <polyline fill="none" vector-effect="none" points="4,11 9,6 14,11 " />

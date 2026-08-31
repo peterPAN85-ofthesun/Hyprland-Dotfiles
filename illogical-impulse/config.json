@@ -88,7 +88,7 @@
             "intervalSeconds": 5
         },
         "thumbnailPath": "",
-        "wallpaperPath": "/home/gregoire/Images/Wallpapers/20220228012117_1.jpg",
+        "wallpaperPath": "/home/gregoire/Images/Wallpapers/20231124035920_1.jpg",
         "widgets": {
             "clock": {
                 "cookie": {
@@ -205,7 +205,7 @@
     "battery": {
         "automaticSuspend": false,
         "critical": 5,
-        "full": 71,
+        "full": 91,
         "low": 20,
         "suspend": 3
     },
@@ -484,7 +484,7 @@
         }
     },
     "sounds": {
-        "battery": true,
+        "battery": false,
         "pomodoro": false,
         "theme": "freedesktop"
     },
