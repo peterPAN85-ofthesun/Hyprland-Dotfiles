@@ -39,6 +39,7 @@ Scope {
         root.resetTargetAction();
         root.clearText();
         root.unlockInProgress = false;
+        pamWatchdogTimer.stop();
         stopFingerPam();
     }
 
@@ -47,6 +48,19 @@ Scope {
         interval: 10000
         onTriggered: {
             root.reset();
+        }
+    }
+
+    // Safety net: if PAM never completes (it can hang right after a resume), nothing else
+    // would ever clear unlockInProgress and the surface stays read-only forever.
+    Timer {
+        id: pamWatchdogTimer
+        interval: 30000
+        onTriggered: {
+            if (!root.unlockInProgress) return;
+            if (pam.active) pam.abort();
+            root.unlockInProgress = false;
+            passwordClearTimer.restart();
         }
     }
 
@@ -60,6 +74,15 @@ Scope {
     }
 
     function tryUnlock(alsoInhibitIdle = false) {
+        // Never hand PAM an empty password. After a resume the surface can see a stray
+        // Enter before any keystroke lands, and every failed attempt counts towards
+        // pam_faillock (3 strikes = account locked out for 10 minutes).
+        if (root.currentText.length === 0) return;
+        // Hold the auto-clear timer: PAM can take longer than the 10s timeout to ask for
+        // the password (typically right after a resume), and clearing mid-auth would submit
+        // an empty password.
+        passwordClearTimer.stop();
+        pamWatchdogTimer.restart();
         root.alsoInhibitIdle = alsoInhibitIdle;
         root.unlockInProgress = true;
         pam.start();
@@ -107,12 +130,14 @@ Scope {
 
         // pam_unix won't send any important messages so all we need is the completion status.
         onCompleted: result => {
+            pamWatchdogTimer.stop();
             if (result == PamResult.Success) {
                 root.unlocked(root.targetAction);
                 stopFingerPam();
             } else {
                 root.clearText();
                 root.unlockInProgress = false;
+                passwordClearTimer.restart();
                 GlobalStates.screenUnlockFailed = true;
                 root.showFailure = true;
             }

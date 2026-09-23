@@ -140,7 +140,10 @@ MouseArea {
             selectionColor: materialShapeChars ? "transparent" : Appearance.colors.colSecondaryContainer
 
             // Password
-            enabled: !root.context.unlockInProgress
+            // NOTE: readOnly, not enabled. A disabled TextField loses keyboard focus while
+            // PAM checks the password and nothing ever gives it back, so the first keystrokes
+            // of the next attempt are silently dropped.
+            readOnly: root.context.unlockInProgress
             echoMode: TextInput.Password
             inputMethodHints: Qt.ImhSensitiveData
 
@@ -153,6 +156,11 @@ MouseArea {
                 target: root.context
                 function onCurrentTextChanged() {
                     passwordBox.text = root.context.currentText;
+                }
+                // Take keyboard focus back as soon as an attempt is over
+                function onUnlockInProgressChanged() {
+                    if (!root.context.unlockInProgress)
+                        root.forceFieldFocus();
                 }
             }
 
